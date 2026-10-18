@@ -1,0 +1,18 @@
+.build/
+*.iso
+*.iso.gz
+*.hybrid.iso
+chroot*
+binary*
+config/package-lists/*.list.chroot.live
+tmp/
+
+# live-build артефакты сборки
+.chroot*/
+.binary*/
+.cache/
+.config/
+.old/
+*.iso
+*.iso.sha256
+build.log

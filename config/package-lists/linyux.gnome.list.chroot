@@ -1,0 +1,21 @@
+# Linyux OS — чистый GNOME (требование 5) + браузер и утилиты (требования 6, 7).
+# Устанавливаются ТОЛЬКО перечисленные компоненты. Без игр и тяжёлого софта.
+
+# GNOME: минимальная оболочка (task-задачи live-build запрещают тянуть games,
+# поэтому gnome-core ставится пакетом, а не task-ом)
+gnome-core
+gdm3
+nautilus
+gnome-terminal
+gedit
+gnome-control-center
+network-manager-gnome
+gnome-system-monitor
+
+# Браузер (требование 6)
+firefox-esr
+
+# Программы (требование 7)
+htop
+cava
+fastfetch

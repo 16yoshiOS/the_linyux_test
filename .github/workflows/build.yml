@@ -1,0 +1,132 @@
+name: Build Linyux OS ISO
+
+# Собирает live-build ISO (i386, iso-hybrid, debian-installer live)
+# и выкладывает результат в GitHub Release (артефакт — всегда, ссылка — на release).
+#
+# Запуск:
+#   - push в main/master или тег v*
+#   - вручную: Actions -> Build Linyux OS ISO -> Run workflow
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      keep_days:
+        description: "Сколько дней хранить артефакт"
+        required: false
+        default: "7"
+
+permissions:
+  contents: write # нужно для создания Release с ISO
+
+concurrency:
+  group: build-iso-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install live-build and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            live-build debootstrap squashfs-tools isolinux syslinux-common \
+            xorriso dosfstools mtools fakeroot cpio wget ca-certificates \
+            qemu-user-static binfmt-support linux-base
+          lb config --help >/dev/null && echo "live-build установлен"
+          test -x /usr/bin/qemu-i386-static && echo "qemu-i386-static OK"
+          command -v linux32 && echo "linux32 OK"
+
+      - name: Configure (auto/config)
+        run: |
+          # auto/config сам вызывает lb config noauto с параметрами:
+          # --architecture i386 / --bootstrap-qemu-arch i386 /
+          # --binary-images iso-hybrid / --debian-installer live.
+          # Bootstrap идёт стандартным debootstrap (чистый Debian Minimal install),
+          # без variant-флагов.
+          lb config
+          echo "--- Проверка жёстких требований ---"
+          grep -q -- '--architecture i386' auto/config \
+            && grep -q -- '--bootstrap-qemu-arch i386' auto/config \
+            && grep -q -- '--binary-images iso-hybrid' auto/config \
+            && grep -q -- '--debian-installer live' auto/config \
+            && grep -q 'LB_LOCALE="en_US.UTF-8"' config/all
+          echo "OK: i386 / iso-hybrid / debian-installer live / en_US.UTF-8"
+          # variant-флаги bootstrap нигде не используются (кроме самого workflow,
+          # где они упомянуты в проверке)
+          ! grep -Eq "variant=(minbase|minimal)" auto/config linyux-config.sh config/
+          echo "OK: bootstrap без variant-флагов (стандартный debootstrap)"
+          # Локали ru/tt, чистый GNOME, firefox-esr, утилиты — в списках пакетов и хуках
+          grep -rq 'ru_RU.UTF-8' config/hooks/ && grep -rq 'tt_RU.UTF-8' config/hooks/
+          grep -rq 'firefox-esr' config/package-lists/
+          grep -rq 'fastfetch' config/package-lists/
+          echo "OK: locales ru/tt, firefox-esr, fastfetch присутствуют"
+
+      - name: Build ISO (live-build)
+        run: |
+          # live-build требует root-доступа (mount/loop); раннер даёт sudo.
+          sudo lb build
+          ls -lh *.iso 2>/dev/null || ls -lh ./*.img 2>/dev/null || true
+
+      - name: Locate and rename artifact
+        id: iso
+        run: |
+          ISO=$(find . -maxdepth 1 \( -name '*.iso' -o -name 'binary-hybrid.iso' -o -name 'live-image-i386.hybrid.iso' \) | head -n1)
+          if [ -z "$ISO" ]; then
+            echo "ISO не найден — листинг:"; ls -la; exit 1
+          fi
+          NAME="linyux-os-i386-${GITHUB_SHA::7}.iso"
+          mv "$ISO" "$NAME"
+          sha256sum "$NAME" > "$NAME.sha256"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          ls -lh "$NAME" "$NAME.sha256"
+
+      - name: Upload artifact (всегда)
+        uses: actions/upload-artifact@v4
+        with:
+          name: linyux-os-i386-iso
+          path: |
+            ${{ steps.iso.outputs.name }}
+            ${{ steps.iso.outputs.name }}.sha256
+          retention-days: ${{ github.event.inputs.keep_days || 7 }}
+          if-no-files-found: error
+
+      - name: Create / update GitHub Release with ISO
+        # Только для тегов v* — чтобы каждый push не плодил релизы.
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.iso.outputs.name }}
+            ${{ steps.iso.outputs.name }}.sha256
+          body: |
+            ## Linyux OS (${{ github.ref_name }}) — i386 live ISO
+
+            - Архитектура: **i686 (32-bit)** — `--architecture i386`, `iso-hybrid`
+            - Установка на жёсткий диск: **debian-installer live**
+            - База: Debian 12 bookworm, чистый Debian Minimal install (debootstrap, без variant-флагов)
+            - Язык по умолчанию: **en_US.UTF-8** (+ переключение на ru_RU.UTF-8 / tt_RU.UTF-8)
+            - Чистый GNOME: gdm3, gnome-core, nautilus, gnome-terminal, gedit, gnome-control-center, network-manager-gnome
+            - Браузер: firefox-esr
+            - Утилиты: htop, cava, xorg, fastfetch, gnome-system-monitor
+
+            Контрольная сумма — в файле `.sha256`.
+          draft: false
+          prerelease: false
+
+      - name: Print download link
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          echo "### Ссылка на ISO:"
+          echo "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${{ steps.iso.outputs.name }}"
+          echo "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${{ steps.iso.outputs.name }}.sha256" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${{ steps.iso.outputs.name }}" >> "$GITHUB_STEP_SUMMARY"

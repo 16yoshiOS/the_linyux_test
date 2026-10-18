@@ -1,0 +1,29 @@
+# config/all - гарантированные жёсткие требования Linyux OS.
+#
+# live-build читает файлы конфигурации в порядке:
+#   config/all -> config/common -> config/bootstrap -> config/chroot ->
+#   config/binary -> config/source
+# Поэтому значения здесь всегда переопределяются более поздними файлами,
+# а auto/config (lb config noauto ...) — командной строкой. Этот файл —
+# страховка: если CI когда-нибудь вызовет "lb config" без корректного
+# auto/config, базовые требования всё равно останутся верными.
+
+# 1. Архитектура: i686 (32-bit), foreign bootstrap через qemu, iso-hybrid
+LB_ARCHITECTURE="i386"
+LB_BOOTSTRAP_QEMU_ARCHITECTURE="i386"
+LB_BOOTSTRAP_QEMU_STATIC="/usr/bin/qemu-i386-static"
+
+# 2. Установка на жёсткий диск: полноценный debian-installer (live)
+LB_DEBIAN_INSTALLER="live"
+
+# 3. Минимальный старт: Debian Minimal install через debootstrap
+#    вариант НЕ передаётся: дефолтный standard = чистый Debian Minimal install
+DEBOOTSTRAP_OPTIONS=""
+
+# Тип бинарного образа
+LB_BINARY_IMAGES="iso-hybrid"
+
+# 4. Локализация: по умолчанию английский
+LB_LOCALE="en_US.UTF-8"
+LB_LOCALE_LIVE="true"
+LB_ZHANGOU="false"
