@@ -51,7 +51,7 @@ if [ "${HOST_ARCH}" = "amd64" ]; then
     fi
     lb config noauto \
         ${COMMON_OPTS} \
-        --bootstrap-qemu-architecture i386 \
+        --bootstrap-qemu-arch i386 \
         --bootstrap-qemu-static "${QEMU_STATIC}" \
         --debootstrap-options "--variant=minimal" \
         "${@}"
