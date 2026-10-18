@@ -1,72 +1,39 @@
-#!/bin/bash
+#!/bin/sh
 
 # Linyux OS — конфигурация live-build (чистый GNOME, i686 32-bit).
 #
-# Жёсткие требования, зашитые здесь:
-#   1. Архитектура i686 (32-bit):     --architecture i386
-#                                     --bootstrap-qemu-architecture i386
-#                                     --binary-images iso-hybrid
-#   2. Установка на жёсткий диск:      --debian-installer live
-#   3. Минимальный старт:              debootstrap variant=minimal
-#                                      (чистый Debian Minimal install)
-#   4. Локализация en_US.UTF-8 по умолчанию + ru_RU.UTF-8 и tt_RU.UTF-8
-#   5. Чистый GNOME (без игр/тяжёлого софта)
-#   6. Браузер firefox-esr
-#   7. htop, cava, xorg, fastfetch, gnome-system-monitor
-#
-# Использование:
-#   lb config          # применяет этот скрипт автоматически
-#   sudo lb build
+# Жёсткие требования:
+#   1. Архитектура i686 (32-bit): --architecture i386
+#                                 --bootstrap-qemu-arch i386
+#                                 --binary-images iso-hybrid
+#   2. Установка на жёсткий диск:  --debian-installer live
+#   3. Минимальный старт:          debootstrap variant=minimal
+#   4. Локализация en_US.UTF-8 по умолчанию + ru_RU.UTF-8, tt_RU.UTF-8
+#      (config/hooks/normal/0020-locales.hook.chroot)
+#   5. Чистый GNOME                (config/package-lists/linyux.gnome.list.chroot)
+#   6. firefox-esr                 (то же)
+#   7. htop, cava, xorg, fastfetch, gnome-system-monitor (то же)
 
 set -e
 
-# --- 1. Архитектура: i686 (32-bit) -------------------------------------------
-lb architecture i386
-lb bootstrap-qemu-architecture i386
-lb binary-images iso-hybrid
+lb config noauto \
+--architecture i386 \
+--bootstrap-qemu-arch i386 \
+--binary-images iso-hybrid \
+--distribution bookworm \
+--parent-distribution bookworm \
+--archive-areas "main contrib non-free non-free-firmware" \
+--mirror-bootstrap "http://deb.debian.org/debian" \
+--mirror-chroot "http://deb.debian.org/debian" \
 
-# --- Дистрибутив --------------------------------------------------------------
-# bookworm (Debian 12) — релиз, в котором есть fastfetch, cava, gdm3, gnome-core
-# и полноценная поддержка i386.
-lb distribution bookworm
-lb parent_distribution bookworm
-lb archive-areas "main contrib non-free non-free-firmware"
-lb mirror-bootstrap http://deb.debian.org/debian
-lb mirror-bootstrap-security http://security.debian.org/debian-security
-lb mirror-chroot http://deb.debian.org/debian
-
-# --- 3. Минимальный старт: чистый Debian Minimal install ----------------------
-# debootstrap выполняет установку варианта minimal (базовая система без лишнего).
-lb bootstrap-variant minimal
-
-# --- 2. Полноценная поддержка установки на жёсткий диск -----------------------
-# --debian-installer live — требование 2 (полноценная установка на жёсткий диск)
-lb debian-installer enabled
-lb debian-installer live
-lb debian-installer-distribution bookworm
-lb debian-installer-bootlinenotes false
-
-# --- Загрузчик -----------------------------------------------------------------
-lb bootloaders isolinux syslinux-extlinux
-lb linux-flavours 686-pae
-
-# --- 4. Локализация ------------------------------------------------------------
-# Язык системы по умолчанию — английский (en_US.UTF-8).
-# Поддержка переключения на русский и татарский добавлена через
-# config/package-lists/linyux.*.list.chroot (locales, fonts) и
-# config/hooks/normal/0020-locales.hook.chroot (генерация локалей, gdm).
-lb locale en_US.UTF-8
-lb mode live
-
-# --- Пользователь live-сессии ---------------------------------------------------
-lb username linyux
-lb fullname "Linyux User"
-lb hostname linyux
-lb user-fullname "Linyux User"
-
-# --- Размер/ФС образа ------------------------------------------------------------
-lb binary-filesystem ext4
-lb binary-force-size 4G
-lb compression zstd
-
-echo "[linyux] Конфигурация lb задана: i386 / iso-hybrid / debian-installer live / minimal bootstrap."
+--debian-installer live \
+--debian-installer-distribution bookworm \
+--bootloaders "syslinux" \
+--linux-flavours "686-pae" \
+--mode debian \
+--system live \
+--chroot-squashfs-compression-type zstd \
+--binary-filesystem ext4 \
+--security true \
+--updates true \
+"${@}"
