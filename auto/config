@@ -4,10 +4,14 @@
 #
 # Жёсткие требования:
 #   1. Архитектура i686 (32-bit): --architecture i386
-#                                 --bootstrap-qemu-architecture i386
+#                                 --bootstrap-qemu-arch i386 (live-build 20230502
+#                                 не принимает длинное имя --bootstrap-qemu-architecture)
 #                                 --binary-images iso-hybrid
 #   2. Установка на жёсткий диск:  --debian-installer live
-#   3. Минимальный старт:          debootstrap variant=minimal
+#   3. Минимальный старт:          debootstrap --variant=minbase
+#      (чистый Debian Minimal install; вариант "minimal" debootstrap не
+#      поддерживает, а live-build 20230502 не имеет --bootstrap-variant —
+#      minbase ставит base-minimum, минимально возможную чистую базу)
 #   4. Локализация en_US.UTF-8 по умолчанию + ru_RU.UTF-8, tt_RU.UTF-8
 #      (config/hooks/normal/0020-locales.hook.chroot)
 #   5. Чистый GNOME                (config/package-lists/linyux.gnome.list.chroot)
@@ -53,7 +57,7 @@ if [ "${HOST_ARCH}" = "amd64" ]; then
         ${COMMON_OPTS} \
         --bootstrap-qemu-arch i386 \
         --bootstrap-qemu-static "${QEMU_STATIC}" \
-        --debootstrap-options "--variant=minimal" \
+        --debootstrap-options "--variant=minbase" \
         "${@}"
 else
     # Нативная сборка на i386 (или другой родной хост): qemu не нужен —
@@ -61,6 +65,6 @@ else
     # и выполнит обычный (native) debootstrap minimal.
     lb config noauto \
         ${COMMON_OPTS} \
-        --debootstrap-options "--variant=minimal" \
+        --debootstrap-options "--variant=minbase" \
         "${@}"
 fi

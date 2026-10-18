@@ -11,7 +11,7 @@ HOST_ARCH="$(dpkg --print-architecture)"
 QEMU_OPTS=()
 if [ "${HOST_ARCH}" = "amd64" ]; then
     # Foreign bootstrap i386 на amd64-хосте через qemu-user-static.
-    QEMU_OPTS=(--bootstrap-qemu-architecture i386 --bootstrap-qemu-static /usr/bin/qemu-i386-static)
+    QEMU_OPTS=(--bootstrap-qemu-arch i386 --bootstrap-qemu-static /usr/bin/qemu-i386-static)
 fi
 
 lb config noauto \
@@ -21,7 +21,7 @@ lb config noauto \
     --distribution bookworm \
     --parent-distribution bookworm \
     --archive-areas "main contrib non-free non-free-firmware" \
-    --debootstrap-options "--variant=minimal" \
+    --debootstrap-options "--variant=minbase" \
     --debian-installer live \
     --debian-installer-distribution bookworm \
     --bootloaders syslinux \
