@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE locale-config SYSTEM "locale-config.dtd">
+<!--
+  Требование 4 (Linyux OS): язык по умолчанию — английский (en_US.UTF-8).
+  Файл применяется к новому пользователю через /etc/skel; переключение на ru_RU.UTF-8
+  и tt_RU.UTF-8 доступно в gnome-control-center -> Region & Language
+  (локали сгенерированы хуком 0020-locales.hook.chroot).
+-->
+<locale-config>
+  <langinfo>
+    <language encoding="UTF-8" variant="">en_US</language>
+    <available-language encoding="UTF-8" variant="">en_US</available-language>
+    <available-language encoding="UTF-8" variant="">ru_RU</available-language>
+    <available-language encoding="UTF-8" variant="">tt_RU</available-language>
+  </langinfo>
+</locale-config>

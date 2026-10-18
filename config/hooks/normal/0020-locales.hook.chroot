@@ -1,0 +1,28 @@
+#!/bin/sh
+# live-build hook (выполняется внутри chroot, $1 не используется).
+
+# Требование 4: локализация.
+#   - Язык системы по умолчанию — английский (en_US.UTF-8).
+#   - Генерируются локали en_US.UTF-8, ru_RU.UTF-8 и tt_RU.UTF-8,
+#     чтобы язык можно было переключить в GNOME Settings -> Region & Language
+#     или на экране входа GDM -> Language.
+
+set -e
+
+# Включаем нужные локали в /etc/locale.gen
+sed -i \
+    -e 's/^#\{0,1\} *en_US\.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' \
+    -e 's/^#\{0,1\} *ru_RU\.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' \
+    -e 's/^#\{0,1\} *tt_RU\.UTF-8 UTF-8/tt_RU.UTF-8 UTF-8/' \
+    /etc/locale.gen
+
+grep -q '^en_US\.UTF-8 UTF-8' /etc/locale.gen || echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen
+grep -q '^ru_RU\.UTF-8 UTF-8' /etc/locale.gen || echo 'ru_RU.UTF-8 UTF-8' >> /etc/locale.gen
+grep -q '^tt_RU\.UTF-8 UTF-8' /etc/locale.gen || echo 'tt_RU.UTF-8 UTF-8' >> /etc/locale.gen
+
+locale-gen
+
+# Язык системы по умолчанию — английский
+printf 'LANG=en_US.UTF-8\nLANGUAGE=en_US:en\n' > /etc/default/locale
+
+exit 0

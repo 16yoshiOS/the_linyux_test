@@ -1,0 +1,21 @@
+# Linyux OS — базовые пакеты (чистая система поверх Debian Minimal install).
+# Архитектура: i386 (i686, 32-bit).
+
+# Ядро и X-сервер (требование 7: xorg)
+linux-image-686-pae
+xorg
+xserver-xorg-video-all
+xserver-xorg-input-all
+
+# Локализация (требование 4):
+# по умолчанию en_US.UTF-8; поддержка переключения на ru_RU.UTF-8 и tt_RU.UTF-8
+locales
+fontconfig
+
+# Базовые шрифты (требование 4)
+fonts-dejavu
+fonts-liberation
+
+# Раскладки клавиатуры для русского/татарского
+keyboard-configuration
+xkb-data

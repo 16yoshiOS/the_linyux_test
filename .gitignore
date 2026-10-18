@@ -1,0 +1,8 @@
+.build/
+*.iso
+*.iso.gz
+*.hybrid.iso
+chroot*
+binary*
+config/package-lists/*.list.chroot.live
+tmp/
