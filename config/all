@@ -17,8 +17,8 @@ LB_BOOTSTRAP_QEMU_STATIC="/usr/bin/qemu-i386-static"
 LB_DEBIAN_INSTALLER="live"
 
 # 3. Минимальный старт: Debian Minimal install через debootstrap
-#    (поддерживаемый вариант — minbase; "minimal" debootstrap не существует)
-DEBOOTSTRAP_OPTIONS="--variant=minbase"
+#    вариант НЕ передаётся: дефолтный standard = чистый Debian Minimal install
+DEBOOTSTRAP_OPTIONS=""
 
 # Тип бинарного образа
 LB_BINARY_IMAGES="iso-hybrid"

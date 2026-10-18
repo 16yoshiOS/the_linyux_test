@@ -9,7 +9,7 @@
 |---|-----------|------------|
 | 1 | Архитектура i686 (32-bit) | `auto/config`: `lb architecture i386`, `lb bootstrap-qemu-architecture i386`, `lb binary-images iso-hybrid`; `config/lb_architecture`; `config/architectures/bootloaders.cfg` |
 | 2 | Установка на жёсткий диск | `auto/config`: `lb debian-installer enabled` + `lb debian-installer live` (`--debian-installer live`) |
-| 3 | Минимальный старт (debootstrap) | `auto/config`: `lb bootstrap-variant minimal` — сборка начинается с чистого Debian Minimal install |
+| 3 | Минимальный старт (debootstrap) | `auto/config`: стандартный debootstrap (без variant-флагов) — сборка начинается с чистого Debian Minimal install |
 | 4 | Локализация | По умолчанию `en_US.UTF-8` (`lb locale en_US.UTF-8`, `/etc/default/locale` в хуке). Хук `config/hooks/normal/0020-locales.hook.chroot` генерирует `en_US.UTF-8`, `ru_RU.UTF-8`, `tt_RU.UTF-8`. Дефолт пользователя + список доступных языков: `config/includes.chroot/etc/skel/.config/locales/user-file`. Шрифты: `fonts-dejavu`, `fonts-liberation` (`config/package-lists/linyux.base.list.chroot`) |
 | 5 | Чистый GNOME | `config/package-lists/linyux.gnome.list.chroot`: только `gdm3`, `gnome-core`, `nautilus`, `gnome-terminal`, `gedit` (в bookworm это и есть gnome-text-editor), `gnome-control-center`, `network-manager-gnome`. Без игр и тяжёлого софта |
 | 6 | Браузер | `firefox-esr` (`linyux.gnome.list.chroot`) |

@@ -21,7 +21,6 @@ lb config noauto \
     --distribution bookworm \
     --parent-distribution bookworm \
     --archive-areas "main contrib non-free non-free-firmware" \
-    --debootstrap-options "--variant=minbase" \
     --debian-installer live \
     --debian-installer-distribution bookworm \
     --bootloaders syslinux \

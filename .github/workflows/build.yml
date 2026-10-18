@@ -48,19 +48,22 @@ jobs:
 
       - name: Configure (auto/config)
         run: |
-          # auto/config сам вызывает lb architecture i386 /
-          # bootstrap-qemu-architecture i386 / binary-images iso-hybrid /
-          # debian-installer live / bootstrap-variant minimal
+          # auto/config сам вызывает lb config noauto с параметрами:
+          # --architecture i386 / --bootstrap-qemu-arch i386 /
+          # --binary-images iso-hybrid / --debian-installer live.
+          # Bootstrap идёт стандартным debootstrap (чистый Debian Minimal install),
+          # без variant-флагов.
           lb config
           echo "--- Проверка жёстких требований ---"
-          # auto/config должен содержать все обязательные параметры
-          grep -q 'lb architecture i386' auto/config \
-            && grep -q 'lb bootstrap-qemu-architecture i386' auto/config \
-            && grep -q 'lb binary-images iso-hybrid' auto/config \
-            && grep -q 'lb debian-installer live' auto/config \
-            && grep -q 'lb bootstrap-variant minimal' auto/config \
-            && grep -q 'lb locale en_US.UTF-8' auto/config
-          echo "OK: i386 / iso-hybrid / debian-installer live / minimal bootstrap / en_US.UTF-8"
+          grep -q -- '--architecture i386' auto/config \
+            && grep -q -- '--bootstrap-qemu-arch i386' auto/config \
+            && grep -q -- '--binary-images iso-hybrid' auto/config \
+            && grep -q -- '--debian-installer live' auto/config \
+            && grep -q 'LB_LOCALE="en_US.UTF-8"' config/all
+          echo "OK: i386 / iso-hybrid / debian-installer live / en_US.UTF-8"
+          # variant-флаги bootstrap нигде не используются
+          ! grep -Eq "variant=(minbase|minimal)" auto/config linyux-config.sh config/ .github/
+          echo "OK: bootstrap без variant-флагов (стандартный debootstrap)"
           # Локали ru/tt, чистый GNOME, firefox-esr, утилиты — в списках пакетов и хуках
           grep -rq 'ru_RU.UTF-8' config/hooks/ && grep -rq 'tt_RU.UTF-8' config/hooks/
           grep -rq 'firefox-esr' config/package-lists/
@@ -109,7 +112,7 @@ jobs:
 
             - Архитектура: **i686 (32-bit)** — `--architecture i386`, `iso-hybrid`
             - Установка на жёсткий диск: **debian-installer live**
-            - База: Debian 12 bookworm, debootstrap variant **minimal**
+            - База: Debian 12 bookworm, чистый Debian Minimal install (debootstrap, без variant-флагов)
             - Язык по умолчанию: **en_US.UTF-8** (+ переключение на ru_RU.UTF-8 / tt_RU.UTF-8)
             - Чистый GNOME: gdm3, gnome-core, nautilus, gnome-terminal, gedit, gnome-control-center, network-manager-gnome
             - Браузер: firefox-esr
