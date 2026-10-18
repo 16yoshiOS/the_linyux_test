@@ -27,7 +27,6 @@ lb config noauto \
     --linux-flavours 686-pae \
     --mode debian \
     --system live \
-    --locale en_US.UTF-8 \
     --hostname linyux \
     --chroot-squashfs-compression-type zstd \
     --binary-filesystem ext4 \

@@ -60,8 +60,9 @@ jobs:
             && grep -q -- '--debian-installer live' auto/config \
             && grep -q 'LB_LOCALE="en_US.UTF-8"' config/all
           echo "OK: i386 / iso-hybrid / debian-installer live / en_US.UTF-8"
-          # variant-флаги bootstrap нигде не используются
-          ! grep -Eq "variant=(minbase|minimal)" auto/config linyux-config.sh config/ .github/
+          # variant-флаги bootstrap нигде не используются (кроме самого workflow,
+          # где они упомянуты в проверке)
+          ! grep -Eq "variant=(minbase|minimal)" auto/config linyux-config.sh config/
           echo "OK: bootstrap без variant-флагов (стандартный debootstrap)"
           # Локали ru/tt, чистый GNOME, firefox-esr, утилиты — в списках пакетов и хуках
           grep -rq 'ru_RU.UTF-8' config/hooks/ && grep -rq 'tt_RU.UTF-8' config/hooks/
