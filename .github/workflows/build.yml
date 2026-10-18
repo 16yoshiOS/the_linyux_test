@@ -37,10 +37,14 @@ jobs:
       - name: Install live-build and dependencies
         run: |
           sudo apt-get update
+          sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             live-build debootstrap squashfs-tools isolinux syslinux-common \
-            xorriso dosfstools mtools fakeroot cpio wget ca-certificates
+            xorriso dosfstools mtools fakeroot cpio wget ca-certificates \
+            qemu-user-static binfmt-support linux-base
           lb config --help >/dev/null && echo "live-build установлен"
+          test -x /usr/bin/qemu-i386-static && echo "qemu-i386-static OK"
+          command -v linux32 && echo "linux32 OK"
 
       - name: Configure (auto/config)
         run: |

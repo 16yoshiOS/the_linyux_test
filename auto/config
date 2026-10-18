@@ -4,7 +4,7 @@
 #
 # Жёсткие требования:
 #   1. Архитектура i686 (32-bit): --architecture i386
-#                                 --bootstrap-qemu-arch i386
+#                                 --bootstrap-qemu-architecture i386
 #                                 --binary-images iso-hybrid
 #   2. Установка на жёсткий диск:  --debian-installer live
 #   3. Минимальный старт:          debootstrap variant=minimal
@@ -16,24 +16,51 @@
 
 set -e
 
-lb config noauto \
---architecture i386 \
---bootstrap-qemu-arch i386 \
---binary-images iso-hybrid \
---distribution bookworm \
---parent-distribution bookworm \
---archive-areas "main contrib non-free non-free-firmware" \
---mirror-bootstrap "http://deb.debian.org/debian" \
---mirror-chroot "http://deb.debian.org/debian" \
+# Хост-архитектура машины сборки.
+HOST_ARCH="$(dpkg --print-architecture)"
 
---debian-installer live \
---debian-installer-distribution bookworm \
---bootloaders "syslinux" \
---linux-flavours "686-pae" \
---mode debian \
---system live \
---chroot-squashfs-compression-type zstd \
---binary-filesystem ext4 \
---security true \
---updates true \
-"${@}"
+# Общие параметры live-build.
+COMMON_OPTS="
+--architecture i386
+--binary-images iso-hybrid
+--distribution bookworm
+--parent-distribution bookworm
+--archive-areas main contrib non-free non-free-firmware
+--mirror-bootstrap http://deb.debian.org/debian
+--mirror-chroot http://deb.debian.org/debian
+--debian-installer live
+--debian-installer-distribution bookworm
+--bootloaders syslinux
+--linux-flavours 686-pae
+--mode debian
+--system live
+--chroot-squashfs-compression-type zstd
+--binary-filesystem ext4
+--security true
+--updates true
+"
+
+if [ "${HOST_ARCH}" = "amd64" ]; then
+    # Сборка i386 на amd64-хосте (например, GitHub Actions ubuntu-latest):
+    # включаем foreign bootstrap через qemu-user-static. Требуется
+    # установленный пакет qemu-user-static (--bootstrap-qemu-static).
+    QEMU_STATIC="/usr/bin/qemu-i386-static"
+    if [ ! -x "${QEMU_STATIC}" ]; then
+        echo "E: qemu-user-static (--bootstrap-qemu-static) не найден: ${QEMU_STATIC}" >&2
+        exit 1
+    fi
+    lb config noauto \
+        ${COMMON_OPTS} \
+        --bootstrap-qemu-architecture i386 \
+        --bootstrap-qemu-static "${QEMU_STATIC}" \
+        --debootstrap-options "--variant=minimal" \
+        "${@}"
+else
+    # Нативная сборка на i386 (или другой родной хост): qemu не нужен —
+    # live-build сам определит, что архитектура хоста совпадает с целевой,
+    # и выполнит обычный (native) debootstrap minimal.
+    lb config noauto \
+        ${COMMON_OPTS} \
+        --debootstrap-options "--variant=minimal" \
+        "${@}"
+fi

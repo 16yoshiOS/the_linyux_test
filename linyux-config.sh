@@ -1,42 +1,39 @@
 #!/bin/bash
 
 # Linyux OS — вспомогательный скрипт конфигурации live-build.
-#
-# Позволяет задать жёсткие требования параметрами lb config напрямую,
-# если auto/config по какой-то причине не используется:
-#
+# Дублирует требования auto/config явными флагами lb config.
 #   ./linyux-config.sh
-#
-# Требования (см. также README.md):
-#   1. Архитектура i686 (32-bit)
-#   2. Установка на жёсткий диск (debian-installer live)
-#   3. Минимальный старт (debootstrap variant=minimal)
-#   4. Локализация en_US.UTF-8 + ru_RU.UTF-8 + tt_RU.UTF-8, шрифты dejavu/liberation
-#   5. Чистый GNOME
-#   6. firefox-esr
-#   7. htop, cava, xorg, fastfetch, gnome-system-monitor
 
 set -e
 
+HOST_ARCH="$(dpkg --print-architecture)"
+
+QEMU_OPTS=()
+if [ "${HOST_ARCH}" = "amd64" ]; then
+    # Foreign bootstrap i386 на amd64-хосте через qemu-user-static.
+    QEMU_OPTS=(--bootstrap-qemu-architecture i386 --bootstrap-qemu-static /usr/bin/qemu-i386-static)
+fi
+
 lb config noauto \
-    --architectures i386 \
     --architecture i386 \
-    --bootstrap-qemu-architecture i386 \
+    "${QEMU_OPTS[@]}" \
     --binary-images iso-hybrid \
-    --modes live \
     --distribution bookworm \
     --parent-distribution bookworm \
     --archive-areas "main contrib non-free non-free-firmware" \
-    --bootstrap-variant minimal \
+    --debootstrap-options "--variant=minimal" \
     --debian-installer live \
     --debian-installer-distribution bookworm \
-    --debian-installer-gui false \
-    --bootloaders "isolinux syslinux-extlinux" \
+    --bootloaders syslinux \
     --linux-flavours 686-pae \
+    --mode debian \
+    --system live \
     --locale en_US.UTF-8 \
     --hostname linyux \
+    --chroot-squashfs-compression-type zstd \
     --binary-filesystem ext4 \
-    --compression zstd \
+    --security true \
+    --updates true \
     "${@}"
 
 echo "[linyux] lb config выполнен: i386, iso-hybrid, debian-installer live, minimal bootstrap."
